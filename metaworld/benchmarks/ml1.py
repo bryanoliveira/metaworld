@@ -5,7 +5,7 @@ from metaworld.envs.mujoco.env_dict import HARD_MODE_ARGS_KWARGS, HARD_MODE_CLS_
 
 class ML1(MultiClassMultiTaskEnv, Benchmark):
 
-    def __init__(self, task_name, env_type='train', n_goals=50, sample_all=False):
+    def __init__(self, task_name, env_type='train', n_goals=50, sample_all=False, out_of_distribution=False):
         assert env_type == 'train' or env_type == 'test'
         
         if task_name in HARD_MODE_CLS_DICT['train']:
@@ -17,7 +17,19 @@ class ML1(MultiClassMultiTaskEnv, Benchmark):
         else:
             raise NotImplementedError
 
-        args_kwargs[task_name]['random_init'] = False
+        args_kwargs[task_name]['kwargs']['random_init'] = False
+
+        if out_of_distribution:
+            # total space: low(-0.1, 0.8, 0.05), high(0.1, 0.9, 0.3)
+            # train space: total space (high-low) - 20% (0.04, 0.02, 0.05) in every dimension
+            # test space: remaining 20%
+            if env_type == 'train':
+                args_kwargs[task_name]['kwargs']['goal_low'] = (-0.1, 0.8, 0.05)
+                args_kwargs[task_name]['kwargs']['goal_high'] = (0.06, 0.88, 0.25) # (0.1, 0.9, 0.3) - 20%
+            else:
+                args_kwargs[task_name]['kwargs']['goal_low'] = (0.06, 0.88, 0.25) # (0.1, 0.9, 0.3) - 20%
+                args_kwargs[task_name]['kwargs']['goal_high'] = (0.1, 0.9, 0.3)
+
         super().__init__(
             task_env_cls_dict=cls_dict,
             task_args_kwargs=args_kwargs,
@@ -36,9 +48,9 @@ class ML1(MultiClassMultiTaskEnv, Benchmark):
         return tasks
 
     @classmethod
-    def get_train_tasks(cls, task_name, sample_all=False):
-        return cls(task_name, env_type='train', n_goals=50, sample_all=sample_all)
+    def get_train_tasks(cls, task_name, sample_all=False, out_of_distribution=False):
+        return cls(task_name, env_type='train', n_goals=50, sample_all=sample_all, out_of_distribution=out_of_distribution)
     
     @classmethod
-    def get_test_tasks(cls, task_name, sample_all=False):
-        return cls(task_name, env_type='test', n_goals=10, sample_all=sample_all)
+    def get_test_tasks(cls, task_name, sample_all=False, out_of_distribution=False):
+        return cls(task_name, env_type='test', n_goals=10, sample_all=sample_all, out_of_distribution=out_of_distribution)
