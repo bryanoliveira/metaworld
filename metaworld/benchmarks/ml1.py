@@ -5,7 +5,7 @@ from metaworld.envs.mujoco.env_dict import HARD_MODE_ARGS_KWARGS, HARD_MODE_CLS_
 
 class ML1(MultiClassMultiTaskEnv, Benchmark):
 
-    def __init__(self, task_name, env_type='train', n_goals=50, sample_all=False, out_of_distribution=False):
+    def __init__(self, task_name, env_type='train', n_goals=50, sample_all=False, out_of_distribution=False, goal_seed=None):
         assert env_type == 'train' or env_type == 'test'
         
         if task_name in HARD_MODE_CLS_DICT['train']:
@@ -37,6 +37,8 @@ class ML1(MultiClassMultiTaskEnv, Benchmark):
             obs_type='plain',
             sample_all=sample_all)
 
+        if goal_seed is not None:
+            self.active_env.goal_space.seed(goal_seed)
         goals = self.active_env.sample_goals_(n_goals)
         self.discretize_goal_space({task_name: goals})
 
@@ -48,9 +50,9 @@ class ML1(MultiClassMultiTaskEnv, Benchmark):
         return tasks
 
     @classmethod
-    def get_train_tasks(cls, task_name, sample_all=False, out_of_distribution=False):
-        return cls(task_name, env_type='train', n_goals=50, sample_all=sample_all, out_of_distribution=out_of_distribution)
+    def get_train_tasks(cls, task_name, sample_all=False, out_of_distribution=False, goal_seed=None):
+        return cls(task_name, env_type='train', n_goals=50, sample_all=sample_all, out_of_distribution=out_of_distribution, goal_seed=goal_seed)
     
     @classmethod
-    def get_test_tasks(cls, task_name, sample_all=False, out_of_distribution=False):
-        return cls(task_name, env_type='test', n_goals=10, sample_all=sample_all, out_of_distribution=out_of_distribution)
+    def get_test_tasks(cls, task_name, sample_all=False, out_of_distribution=False, goal_seed=None):
+        return cls(task_name, env_type='test', n_goals=10, sample_all=sample_all, out_of_distribution=out_of_distribution, goal_seed=goal_seed)
